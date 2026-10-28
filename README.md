@@ -81,7 +81,8 @@ Where:
 | $V^\pi(s)$ | Value of state $s$ under policy $\pi$ |
 
 ---
-## Algorithm
+
+**## Algorithm**
 
 1. Create the FrozenLake-v1 environment using Gymnasium.
 2. Access the transition model of the environment.
@@ -96,22 +97,71 @@ Where:
 
 ---
 
-## Program
+**## Program**
 
 ```python
+import gymnasium as gym
+import numpy as np
 
+env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
 
-# -------------------------------------------------
-# Policy Evaluation Function
-# -------------------------------------------------
+env = env.unwrapped
 
+n_states = env.observation_space.n
+n_actions = env.action_space.n
 
-# -------------------------------------------------
-# Display Output
-# -------------------------------------------------
+gamma = 0.99
+theta = 1e-8
 
-# Change the parameters and observe the results
+policy = np.ones((n_states, n_actions)) / n_actions
 
+V = np.zeros(n_states)
+
+def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
+    V = np.zeros(env.observation_space.n)
+    iteration = 0
+
+    while True:
+        delta = 0
+
+        for state in range(env.observation_space.n):
+            v = V[state]
+            new_value = 0
+
+            for action in range(env.action_space.n):
+                action_value = 0
+
+                for probability, next_state, reward, done in env.P[state][action]:
+                    action_value += probability * (reward + gamma * V[next_state] * (not done))
+
+                new_value += policy[state][action] * action_value
+
+            V[state] = new_value
+            delta = max(delta, abs(v - V[state]))
+
+        iteration += 1
+
+        if delta < theta:
+            break
+
+    return V, iteration
+
+V, iterations = policy_evaluation(env, policy, gamma, theta)
+
+print("Name:            Sanjeev A")
+print("Register Number: 212224230246")
+print("Number of iterations:", iterations)
+
+print("\nState-Value Function:")
+print(V)
+
+print("Name:            Sanjeev A")
+print("Register Number: 212224230246")
+
+print("\nState-Value Function as 4x4 Grid:")
+print(np.round(V.reshape(4, 4), 4))
+
+env.close()
 ```
 
 ---
@@ -119,26 +169,44 @@ Where:
 ## Output
 
 ```text
+Name:            Sanjeev A
+Register Number: 212224230246
+Number of iterations: 54
 
-Number of Iterations: 
+State-Value Function:
+[0.01235611 0.01042444 0.01933842 0.00947774 0.01478704 0.
+ 0.03889445 0.         0.03260247 0.08433764 0.13781085 0.
+ 0.         0.17034482 0.43357944 0.        ]
 
 State-Value Function as 4x4 Grid:
-
-
-
+[[0.0124 0.0104 0.0193 0.0095]
+ [0.0148 0.     0.0389 0.    ]
+ [0.0326 0.0843 0.1378 0.    ]
+ [0.     0.1703 0.4336 0.    ]]
 ```
 ---
 
 ## Result
 
-Iterative policy evaluation was implemented successfully using the Gymnasium FrozenLake environment. The state-value function for the fixed random policy was estimated using the Bellman expectation equation.
+Iterative policy evaluation was implemented successfully using the Gymnasium FrozenLake environment. The state-value function for the fixed random policy was estimated using the Bellman expectation equation and converged after 54 iterations.
 
 ---
 
 ## Inference
 
 ```text
+1. The random policy assigns equal probability to all available actions.
 
+2. The value function is initialized with zero for all states.
+
+3. The Bellman expectation equation is repeatedly applied to update
+   the value of each state.
+
+4. The algorithm converged after 54 iterations.
+
+5. The highest state value obtained is 0.4336 for state 14.
+
+6. The final state-value function is represented as a 4 x 4 grid.
 
 
 ```
